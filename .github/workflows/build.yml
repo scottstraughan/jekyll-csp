@@ -22,11 +22,20 @@ jobs:
         with:
           ruby-version: '3.3'
       - run: gem build *.gemspec
+      - name: Upload to GitHub Artifacts
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b
+        with:
+          name: gemfile
+          path: "*.gem"
 
   # Deploy to RubyGems
   deploy:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+        with:
+          name: gemfile
       - name: Deploy to GitHub Pages
         run: gem push *.gem
