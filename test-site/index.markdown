@@ -18,6 +18,7 @@ This is a test page!
   body { background-color: green ;}
 </style>
 
+<div class="test2" style="background-color: red;">Test!</div>
 
 <iframe src="https://www.wikipedia.org"></iframe>
 

@@ -2,4 +2,6 @@ jekyll_csp:
   indentation: 2
   newlines: true
   debug: true
-  include_self: true
+  inject_self: 
+    - frame-src
+    - style-src
