@@ -1,0 +1,5 @@
+jekyll_csp:
+  indentation: 2
+  newlines: true
+  debug: true
+  include_self: true
