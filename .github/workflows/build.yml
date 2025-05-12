@@ -41,6 +41,7 @@ jobs:
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: gemfile
+      - run: ls -l
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
