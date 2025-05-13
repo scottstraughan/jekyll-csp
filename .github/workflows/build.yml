@@ -30,6 +30,8 @@ jobs:
 
   # Deploy to RubyGems
   deploy:
+    if: github.event_name == 'workflow_dispatch'
+
     permissions:
       contents: write
       id-token: write
