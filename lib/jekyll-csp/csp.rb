@@ -28,7 +28,7 @@ module CSP
       @indentation = config['indentation'] || 2
       @enable_newlines = config['newlines'].to_s ? config['newlines'] : true
       @debug = config['debug'].to_s ? config['debug'] : false
-      @include_self = config['include_self'].to_s ? config['include_self'] : false
+      @inject_self = config['inject_self'] || ['script-src', 'style-src', 'img-src', 'frame-src']
 
       if @enable_newlines == false
         @indentation = 0
@@ -36,7 +36,6 @@ module CSP
 
       self.write_debug_log(config)
     end
-
 
     ##
     # Write a debug log
@@ -55,8 +54,12 @@ module CSP
       # Line separator
       line_sep = @enable_newlines ? "\n" : ""
 
+      if items.empty?
+        return "" << line_sep  << self.get_indent_str(3) << tag << ';'
+      end
+
       "" \
-      << line_sep \
+      << line_sep  \
       << self.get_indent_str(3) \
       << tag \
       << " " \
@@ -85,6 +88,7 @@ module CSP
       csp['content'] = meta_content
     end
 
+    ## Locate an existing CSP or create one
     def get_or_create_csp_tag
       csp = @nokogiri.at_xpath("//meta[translate(@http-equiv, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz') = 'content-security-policy']")
 
@@ -119,20 +123,24 @@ module CSP
         policies = content.split(';')
         
         policies.each do |policy|
-          policy = policy.strip! || policy
+          policy = policy.strip
+          
+           policy_tag = policy
+           policy_items = []
 
           if policy.include? ' '
             policy_parts = policy.split(' ')
-
-            self.write_debug_log("Found existing CSP meta tag for '" << policy_parts[0] << "', concatenating rather than creating.")
-            
-            # If an existing tag doesn't exist, add it assuming the user knows best
-            if !@csp_tags.key?(policy_parts[0])
-              @csp_tags[policy_parts[0]] = []
-            end
-            
-            @csp_tags[policy_parts[0]].concat(policy_parts.drop(1))
+            policy_tag = policy_parts[0]
+            policy_items = policy_parts.drop(1)
           end
+
+          # If an existing tag doesn't exist, add it
+          if !@csp_tags.key?(policy_tag)
+            @csp_tags[policy_tag] = []
+          end
+          
+          # Concat the tag items
+          @csp_tags[policy_tag].concat(policy_items)
         end
 
         @nokogiri.search('meta[http-equiv="Content-Security-Policy"]').each do |el|
@@ -144,12 +152,10 @@ module CSP
     ##
     # Initialize some default values
     def inject_defaults
-      if @include_self == false
-        return 
-      end
-
-      @csp_tags.each do |tag, items|
-        items.push("'self'")
+      @csp_tags.each do |directive, properties|
+        if @inject_self.include? directive
+          properties.push("'self'")
+        end
       end
     end
 
